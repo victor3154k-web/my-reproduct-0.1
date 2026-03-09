@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-zinc-950 text-zinc-100 antialiased;
+  }
+}
+
+@layer components {
+  .led-glow-inspired {
+    transition: box-shadow 2s ease-in-out;
+  }
+  
+  .glass-card {
+    @apply bg-black/20 backdrop-blur-md border border-white/5 rounded-2xl;
+  }
+
+  .input-field {
+    @apply w-full bg-white/5 border border-white/5 rounded-lg px-4 py-2.5 outline-none transition-all duration-500 focus:bg-white/10;
+  }
+
+  .btn-primary {
+    @apply w-full py-2.5 rounded-lg font-medium transition-all duration-700 active:scale-[0.98];
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 10s ease-in-out infinite;
+}
+
+.bg-mesh {
+  background-image: 
+    radial-gradient(at 0% 0%, var(--mesh-color-1) 0px, transparent 45%),
+    radial-gradient(at 100% 0%, var(--mesh-color-2) 0px, transparent 45%),
+    radial-gradient(at 50% 100%, rgba(255, 255, 255, 0.02) 0px, transparent 45%);
+  transition: --mesh-color-1 3s ease, --mesh-color-2 3s ease;
+}
+
+@property --mesh-color-1 {
+  syntax: '<color>';
+  initial-value: rgba(220, 38, 38, 0.1);
+  inherits: false;
+}
+
+@property --mesh-color-2 {
+  syntax: '<color>';
+  initial-value: rgba(16, 185, 129, 0.1);
+  inherits: false;
+}
