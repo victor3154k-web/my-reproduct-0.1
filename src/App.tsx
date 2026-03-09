@@ -11,6 +11,8 @@ import { auth, googleProvider, db } from './lib/firebase';
 import { 
   signInWithEmailAndPassword, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   onAuthStateChanged,
   User
 } from 'firebase/auth';
@@ -80,6 +82,19 @@ export default function App() {
   // Listen for auth state changes
   useEffect(() => {
     if (!auth) return;
+
+    // Handle redirect result for mobile/webview environments
+    getRedirectResult(auth).then((result) => {
+      if (result?.user) {
+        console.log("Login via redirect bem-sucedido:", result.user.email);
+      }
+    }).catch((error) => {
+      console.error("Erro ao processar redirecionamento de login:", error);
+      if (error.code === 'auth/internal-error' || error.code === 'auth/network-request-failed') {
+        alert('Erro de conexão ao tentar login. Verifique sua internet.');
+      }
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (!currentUser) {
@@ -215,10 +230,33 @@ export default function App() {
     }
     setIsLoading(true);
     try {
-      await signInWithPopup(auth, googleProvider);
+      // Check if we are in a WebView or mobile environment where popups often fail
+      const isWebView = /wv|Median|GoNative/i.test(navigator.userAgent) || 
+                        (window.innerWidth <= 768 && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+      
+      if (isWebView) {
+        // Direct redirect for mobile/webview
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        // Try popup first for desktop, fallback to redirect if blocked
+        try {
+          await signInWithPopup(auth, googleProvider);
+        } catch (popupError: any) {
+          if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/cancelled-popup-request') {
+            await signInWithRedirect(auth, googleProvider);
+          } else {
+            throw popupError;
+          }
+        }
+      }
     } catch (error: any) {
-      alert('Erro no Google Login: ' + error.message);
+      console.error("Erro no Google Login:", error);
+      // Don't alert for cancelled requests as they are often intentional or handled by redirect
+      if (error.code !== 'auth/cancelled-popup-request') {
+        alert('Erro no Google Login: ' + error.message);
+      }
     } finally {
+      // Note: For redirect, the page will reload, so setIsLoading(false) might not be visible
       setIsLoading(false);
     }
   };
@@ -653,7 +691,14 @@ export default function App() {
             { id: 'playlist', title: 'Playlist de Reprodução', data: playlist },
             { id: 'history', title: 'Continuar Assistindo', data: history }
           ].filter(row => activeTab === 'home' || row.id === activeTab).map((row, idx) => (
-            <div key={idx} className="px-4 md:px-12 space-y-2 md:space-y-4">
+            <motion.div 
+              key={idx} 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              className="px-4 md:px-12 space-y-2 md:space-y-4"
+            >
               <h3 className="text-lg md:text-xl font-bold text-zinc-100 hover:text-white cursor-pointer inline-flex items-center gap-1 group">
                 {row.title} <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
               </h3>
@@ -663,8 +708,14 @@ export default function App() {
                   {row.data.length > 0 ? row.data.map((video) => (
                     <motion.div 
                       key={video.id}
-                      whileHover={{ scale: 1.1, zIndex: 20 }}
-                      className="flex-none w-[45vw] md:w-[18vw] aspect-video relative rounded-sm overflow-hidden cursor-pointer snap-start"
+                      layout
+                      whileHover={{ 
+                        scale: 1.05, 
+                        zIndex: 20,
+                        transition: { type: 'spring', stiffness: 400, damping: 25 }
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex-none w-[45vw] md:w-[18vw] aspect-video relative rounded-sm overflow-hidden cursor-pointer snap-start shadow-lg"
                       onClick={() => setSelectedInfoVideo(video)}
                     >
                       <img 
@@ -715,7 +766,7 @@ export default function App() {
                   )}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </main>
