@@ -351,8 +351,8 @@ export default function App() {
 
   const current = themeConfig[theme];
 
-  // Login Screen (Original Theme)
-  if (!user) {
+  // Login Screen (Original Theme) - Temporarily disabled by user request
+  if (false && !user) {
     return (
       <div 
         className="min-h-screen flex items-center justify-center p-6 bg-mesh transition-all duration-[3000ms]"
@@ -556,11 +556,11 @@ export default function App() {
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="w-8 h-8 rounded overflow-hidden transition-all"
             >
-              {user.photoURL ? (
+              {user?.photoURL ? (
                 <img src={user.photoURL} alt="Profile" referrerPolicy="no-referrer" />
               ) : (
-                <div className="w-full h-full bg-blue-500 flex items-center justify-center text-xs font-bold">
-                  {user.email?.charAt(0).toUpperCase()}
+                <div className="w-full h-full bg-zinc-700 flex items-center justify-center text-xs font-bold">
+                  {user?.email ? user.email.charAt(0).toUpperCase() : <UserIcon className="w-4 h-4" />}
                 </div>
               )}
             </button>
@@ -574,24 +574,33 @@ export default function App() {
                   className="absolute right-0 mt-2 w-48 bg-black/90 border border-white/10 shadow-2xl rounded-sm py-2 z-50"
                 >
                   <div className="px-4 py-2 border-b border-white/10 mb-2">
-                    <p className="text-xs font-bold truncate">{user.displayName || 'Usuário'}</p>
-                    <p className="text-[10px] text-zinc-500 truncate">{user.email}</p>
+                    <p className="text-xs font-bold truncate">{user?.displayName || 'Visitante'}</p>
+                    <p className="text-[10px] text-zinc-500 truncate">{user?.email || 'Modo Offline'}</p>
                   </div>
-                  <button className="w-full text-left px-4 py-2 text-xs hover:underline">Conta</button>
+                  <button className="w-full text-left px-4 py-2 text-xs hover:bg-white/10">Conta</button>
                   <button 
                     onClick={() => { setShowSettings(true); setShowProfileMenu(false); }}
-                    className="w-full text-left px-4 py-2 text-xs hover:underline"
+                    className="w-full text-left px-4 py-2 text-xs hover:bg-white/10"
                   >
                     Configurações
                   </button>
-                  <button className="w-full text-left px-4 py-2 text-xs hover:underline">Centro de Ajuda</button>
+                  <button className="w-full text-left px-4 py-2 text-xs hover:bg-white/10">Centro de Ajuda</button>
                   <div className="h-px bg-white/10 my-2" />
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-xs font-bold hover:underline"
-                  >
-                    Sair da Lumina
-                  </button>
+                  {user ? (
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-white/10 text-red-400"
+                    >
+                      Sair da Lumina
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => window.location.reload()}
+                      className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-white/10 text-green-400"
+                    >
+                      Entrar no Sistema
+                    </button>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
