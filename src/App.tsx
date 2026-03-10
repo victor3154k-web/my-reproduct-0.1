@@ -7,9 +7,10 @@ import {
   Volume2, Maximize, Pause, SkipForward, SkipBack,
   Film, Tv, Monitor, Info, X, LayoutGrid, Star, Trash2
 } from 'lucide-react';
-import { auth, googleProvider, db } from './lib/firebase';
+import { auth, githubProvider, db } from './lib/firebase';
 import { 
   signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
   signInWithPopup, 
   signInWithRedirect,
   getRedirectResult,
@@ -36,12 +37,13 @@ interface VideoItem {
 }
 
 export default function App() {
-  const [theme, setTheme] = useState<Theme>('ruby');
+  const [theme, setTheme] = useState<'blue' | 'emerald'>('blue');
   const [isHovered, setIsHovered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -74,7 +76,7 @@ export default function App() {
   // Automatic theme cycling
   useEffect(() => {
     const interval = setInterval(() => {
-      setTheme(prev => prev === 'ruby' ? 'emerald' : 'ruby');
+      setTheme(prev => prev === 'blue' ? 'emerald' : 'blue');
     }, 5000); // Change every 5 seconds
     return () => clearInterval(interval);
   }, []);
@@ -215,48 +217,47 @@ export default function App() {
     }
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
     } catch (error: any) {
-      alert('Erro ao entrar: ' + error.message);
+      alert('Erro: ' + error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGithubLogin = async () => {
     if (!auth) {
       alert('Firebase não está configurado. Adicione as chaves de API nas configurações.');
       return;
     }
     setIsLoading(true);
     try {
-      // Check if we are in a WebView or mobile environment where popups often fail
       const isWebView = /wv|Median|GoNative/i.test(navigator.userAgent) || 
                         (window.innerWidth <= 768 && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
       
       if (isWebView) {
-        // Direct redirect for mobile/webview
-        await signInWithRedirect(auth, googleProvider);
+        await signInWithRedirect(auth, githubProvider);
       } else {
-        // Try popup first for desktop, fallback to redirect if blocked
         try {
-          await signInWithPopup(auth, googleProvider);
+          await signInWithPopup(auth, githubProvider);
         } catch (popupError: any) {
           if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/cancelled-popup-request') {
-            await signInWithRedirect(auth, googleProvider);
+            await signInWithRedirect(auth, githubProvider);
           } else {
             throw popupError;
           }
         }
       }
     } catch (error: any) {
-      console.error("Erro no Google Login:", error);
-      // Don't alert for cancelled requests as they are often intentional or handled by redirect
+      console.error("Erro no GitHub Login:", error);
       if (error.code !== 'auth/cancelled-popup-request') {
-        alert('Erro no Google Login: ' + error.message);
+        alert('Erro no GitHub Login: ' + error.message);
       }
     } finally {
-      // Note: For redirect, the page will reload, so setIsLoading(false) might not be visible
       setIsLoading(false);
     }
   };
@@ -331,176 +332,203 @@ export default function App() {
   };
 
   const themeConfig = {
-    ruby: {
-      accent: 'bg-[#DC2626]', // Ruby Red (Inspired by Netflix)
-      glow: 'shadow-[0_0_20px_rgba(220,38,38,0.15)]',
-      border: 'border-[#DC2626]/20',
-      icon: <Play className="w-5 h-5 fill-current" />,
-      name: 'Ruby',
-      secondary: 'text-[#DC2626]'
+    blue: {
+      accent: 'bg-[#0066FF]', // LED Blue
+      glow: 'shadow-[0_0_25px_rgba(0,102,255,0.4)]',
+      border: 'border-[#0066FF]/30',
+      icon: <Monitor className="w-5 h-5" />,
+      name: 'Blue LED',
+      secondary: 'text-[#0066FF]'
     },
     emerald: {
-      accent: 'bg-[#10B981]', // Emerald Green (Inspired by Spotify)
-      glow: 'shadow-[0_0_20px_rgba(16,185,129,0.15)]',
-      border: 'border-[#10B981]/20',
-      icon: <Music className="w-5 h-5 fill-current" />,
-      name: 'Emerald',
-      secondary: 'text-[#10B981]'
+      accent: 'bg-[#00FF66]', // LED Green
+      glow: 'shadow-[0_0_25px_rgba(0,255,102,0.4)]',
+      border: 'border-[#00FF66]/30',
+      icon: <Play className="w-5 h-5 fill-current" />,
+      name: 'Green LED',
+      secondary: 'text-[#00FF66]'
     }
   };
 
   const current = themeConfig[theme];
 
-  // Login Screen (Original Theme) - Temporarily disabled by user request
-  if (false && !user) {
+  // Login Screen (Original Theme)
+  if (!user) {
     return (
       <div 
-        className="min-h-screen flex items-center justify-center p-6 bg-mesh transition-all duration-[3000ms]"
-        style={{ 
-          // @ts-ignore - Custom properties for CSS transition
-          '--mesh-color-1': theme === 'ruby' ? 'rgba(220, 38, 38, 0.12)' : 'rgba(16, 185, 129, 0.05)',
-          '--mesh-color-2': theme === 'ruby' ? 'rgba(220, 38, 38, 0.05)' : 'rgba(16, 185, 129, 0.12)'
-        }}
+        className="min-h-screen flex items-center justify-center p-6 bg-[#050505] relative overflow-hidden"
       >
-        {/* Background Decorative Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* LED Background Grid */}
+        <div className="absolute inset-0 z-0 opacity-20" style={{ 
+          backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)',
+          backgroundSize: '24px 24px'
+        }} />
+
+        {/* Animated Background LED Glows */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
           <motion.div 
             animate={{ 
-              backgroundColor: theme === 'ruby' ? '#DC2626' : '#10B981',
-              opacity: 0.08
+              opacity: [0.05, 0.15, 0.05],
             }}
-            transition={{ duration: 3 }}
-            className="absolute -top-24 -left-24 w-96 h-96 rounded-full blur-[100px]" 
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+            className={`absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[120px] ${theme === 'blue' ? 'bg-[#0066FF]' : 'bg-[#00FF66]'} will-change-[opacity]`}
           />
           <motion.div 
             animate={{ 
-              backgroundColor: theme === 'ruby' ? '#DC2626' : '#10B981',
-              opacity: 0.08
+              opacity: [0.05, 0.1, 0.05],
             }}
-            transition={{ duration: 3 }}
-            className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full blur-[100px]" 
+            transition={{ duration: 10, repeat: Infinity, ease: "linear", delay: 1 }}
+            className={`absolute bottom-1/4 right-1/4 w-[600px] h-[600px] rounded-full blur-[120px] ${theme === 'blue' ? 'bg-[#00FF66]' : 'bg-[#0066FF]'} will-change-[opacity]`}
           />
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          initial={{ opacity: 0, scale: 0.9, y: 30 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
           className="w-full max-w-md relative z-10"
         >
-          {/* Login Card */}
-          <div className={`glass-card p-8 transition-all duration-[2000ms] ${current.glow} ${current.border}`}>
-            <div className="text-center mb-8">
-              <div className="relative inline-flex mb-6">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={theme}
-                    initial={{ scale: 0.8, opacity: 0, rotate: -10 }}
-                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                    exit={{ scale: 0.8, opacity: 0, rotate: 10 }}
-                    transition={{ duration: 0.6 }}
-                    className={`inline-flex items-center justify-center w-14 h-14 rounded-xl ${current.accent} text-white shadow-lg`}
-                  >
-                    {current.icon}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-              
-              <h1 className="text-2xl font-display font-bold tracking-tight mb-8">
-                Lumina Access
-              </h1>
-
-              {!auth && (
-                <div className="mb-6 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] leading-relaxed">
-                  <p className="font-bold mb-1 uppercase tracking-wider">Configuração Necessária</p>
-                  As chaves do Firebase não foram detectadas. Adicione-as no menu de configurações para habilitar o login.
-                </div>
-              )}
-            </div>
-
-            <form className="space-y-4" onSubmit={handleLogin}>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-medium uppercase tracking-widest text-zinc-600 ml-1">Identity</label>
-                <div className="relative group">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-zinc-400 transition-colors" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="email@lumina.com"
-                    className={`input-field pl-10 text-sm focus:ring-1 ${theme === 'ruby' ? 'focus:ring-[#DC2626]/30' : 'focus:ring-[#10B981]/30'}`}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-medium uppercase tracking-widest text-zinc-600">Secret</label>
-                  <a href="#" className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors">Recover</a>
-                </div>
-                <div className="relative group">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-zinc-400 transition-colors" />
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className={`input-field pl-10 text-sm focus:ring-1 ${theme === 'ruby' ? 'focus:ring-[#DC2626]/30' : 'focus:ring-[#10B981]/30'}`}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                className={`btn-primary ${current.accent} text-white text-sm flex items-center justify-center gap-2 group relative overflow-hidden transition-all duration-[2000ms] ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
+          {/* Login Card with LED Border */}
+          <div className={`relative p-[2px] rounded-3xl overflow-hidden group`}>
+            {/* LED Border Animation */}
+            <motion.div 
+              animate={{ 
+                rotate: 360 
+              }}
+              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-[-100%] z-0 will-change-transform"
+              style={{
+                background: `conic-gradient(from 0deg, transparent, ${theme === 'blue' ? '#0066FF' : '#00FF66'}, transparent 40%)`
+              }}
+            />
+            
+            <div className="relative z-10 bg-[#0a0a0a]/90 backdrop-blur-2xl rounded-[22px] p-10 shadow-2xl border border-white/5">
+              <div className="text-center mb-10">
                 <motion.div
-                  className="absolute inset-0 bg-white/10 translate-x-[-100%]"
-                  animate={{ x: isHovered && !isLoading ? '100%' : '-100%' }}
-                  transition={{ duration: 0.5 }}
-                />
-                <span className="relative z-10 flex items-center gap-2">
-                  {isLoading ? (
-                    <>
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl ${current.accent} text-white shadow-[0_0_30px_rgba(0,0,0,0.5)] mb-6 relative z-10 ${current.glow}`}
+                >
+                  {current.icon}
+                </motion.div>
+                
+                <motion.h1 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-3xl font-display font-black tracking-tighter mb-2"
+                >
+                  LUMINA <span className={current.secondary}>ACESSO</span>
+                </motion.h1>
+                <motion.p 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.3em]"
+                >
+                  {isSignUp ? 'Crie sua identidade digital' : 'Autentique-se para continuar'}
+                </motion.p>
+              </div>
+
+              <form className="space-y-6 relative z-10" onSubmit={handleLogin}>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 ml-1">Identidade</label>
+                  <div className="relative group/input">
+                    <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${theme === 'blue' ? 'group-focus-within/input:text-[#0066FF]' : 'group-focus-within/input:text-[#00FF66]'} text-zinc-600`} />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="email@lumina.com"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all placeholder:text-zinc-800 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center px-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Segredo</label>
+                    {!isSignUp && <button type="button" className="text-[10px] text-zinc-600 hover:text-white transition-colors font-bold">Recuperar</button>}
+                  </div>
+                  <div className="relative group/input">
+                    <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${theme === 'blue' ? 'group-focus-within/input:text-[#0066FF]' : 'group-focus-within/input:text-[#00FF66]'} text-zinc-600`} />
+                    <input
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all placeholder:text-zinc-800 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.01, boxShadow: `0 0 15px ${theme === 'blue' ? 'rgba(0,102,255,0.2)' : 'rgba(0,255,102,0.2)'}` }}
+                  whileTap={{ scale: 0.99 }}
+                  type="submit"
+                  disabled={isLoading}
+                  className={`w-full py-4 rounded-xl font-black text-xs tracking-[0.2em] shadow-2xl transition-all disabled:opacity-50 bg-zinc-100 hover:bg-white text-black relative overflow-hidden group/btn`}
+                >
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    {isLoading ? (
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                        className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full"
                       />
-                      Authenticating...
-                    </>
-                  ) : (
-                    <>
-                      Enter Lumina <LogIn className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </span>
-              </button>
-            </form>
+                    ) : (
+                      <>
+                        {isSignUp ? 'REGISTRAR CONTA' : 'ENTRAR NO SISTEMA'} <LogIn className="w-4 h-4" />
+                      </>
+                    )}
+                  </span>
+                  <motion.div 
+                    className="absolute inset-0 bg-black/5 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000"
+                  />
+                </motion.button>
+              </form>
 
-            <div className="mt-6">
-              <div className="relative flex items-center justify-center mb-6">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
-              </div>
+              <div className="mt-10 relative z-10">
+                <div className="relative flex items-center justify-center mb-8">
+                  <div className="absolute w-full h-px bg-white/5" />
+                  <span className="relative px-4 bg-[#0d0d0d] text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">Protocolo Externo</span>
+                </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button 
-                  onClick={handleGoogleLogin}
-                  className="flex items-center justify-center gap-2 py-2.5 glass-card border-white/5 hover:bg-white/5 transition-all text-xs font-medium text-zinc-400 hover:text-white"
-                >
-                  <Chrome className="w-3.5 h-3.5" /> Google
-                </button>
-                <button className="flex items-center justify-center gap-2 py-2.5 glass-card border-white/5 hover:bg-white/5 transition-all text-xs font-medium text-zinc-400 hover:text-white">
-                  <Github className="w-3.5 h-3.5" /> GitHub
-                </button>
+                <div className="space-y-4">
+                  <motion.button 
+                    whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleGithubLogin}
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black tracking-[0.2em] transition-all"
+                  >
+                    <Github className="w-4 h-4" /> CONTINUAR COM GITHUB
+                  </motion.button>
+                </div>
+
+                <div className="mt-10 text-center">
+                  <button 
+                    onClick={() => setIsSignUp(!isSignUp)}
+                    className="text-[10px] font-black text-zinc-500 hover:text-white transition-colors uppercase tracking-[0.2em]"
+                  >
+                    {isSignUp ? 'Já possui uma conta? Entrar' : "Não tem uma conta? Criar agora"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+          
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="text-center mt-10 text-[10px] text-zinc-800 font-black uppercase tracking-[0.5em]"
+          >
+            Lumina LED Protocol v5.0
+          </motion.p>
         </motion.div>
       </div>
     );
