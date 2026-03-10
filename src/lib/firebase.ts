@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getAuth, GithubAuthProvider, Auth } from "firebase/auth";
+import { getAuth, GithubAuthProvider, GoogleAuthProvider, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -15,6 +15,7 @@ let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let db: Firestore | undefined;
 const githubProvider = new GithubAuthProvider();
+const googleProvider = new GoogleAuthProvider();
 
 // Only initialize if API key is present
 if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "") {
@@ -27,4 +28,4 @@ if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "") {
   }
 }
 
-export { auth, githubProvider, db };
+export { auth, githubProvider, googleProvider, db };

@@ -7,7 +7,7 @@ import {
   Volume2, Maximize, Pause, SkipForward, SkipBack, Cpu,
   Film, Tv, Monitor, Info, X, LayoutGrid, Star, Trash2
 } from 'lucide-react';
-import { auth, githubProvider, db } from './lib/firebase';
+import { auth, githubProvider, googleProvider, db } from './lib/firebase';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
@@ -225,6 +225,39 @@ export default function App() {
       }
     } catch (error: any) {
       alert('Erro: ' + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    if (!auth) {
+      alert('Firebase não está configurado. Adicione as chaves de API nas configurações.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const isWebView = /wv|Median|GoNative/i.test(navigator.userAgent) || 
+                        (window.innerWidth <= 768 && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+      
+      if (isWebView) {
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        try {
+          await signInWithPopup(auth, googleProvider);
+        } catch (popupError: any) {
+          if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/cancelled-popup-request') {
+            await signInWithRedirect(auth, googleProvider);
+          } else {
+            throw popupError;
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error("Erro no Google Login:", error);
+      if (error.code !== 'auth/cancelled-popup-request') {
+        alert('Erro no Google Login: ' + error.message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -515,15 +548,24 @@ export default function App() {
                   <span className="relative px-4 bg-[#0d0d0d] text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">Protocolo Externo</span>
                 </div>
 
-                <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <motion.button 
+                    whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleGoogleLogin}
+                    disabled={isLoading}
+                    className="flex items-center justify-center gap-3 py-4 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black tracking-[0.2em] transition-all"
+                  >
+                    <Chrome className="w-4 h-4" /> GOOGLE
+                  </motion.button>
                   <motion.button 
                     whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleGithubLogin}
                     disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black tracking-[0.2em] transition-all"
+                    className="flex items-center justify-center gap-3 py-4 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black tracking-[0.2em] transition-all"
                   >
-                    <Github className="w-4 h-4" /> CONTINUAR COM GITHUB
+                    <Github className="w-4 h-4" /> GITHUB
                   </motion.button>
                 </div>
 
