@@ -364,21 +364,13 @@ export default function App() {
           backgroundSize: '24px 24px'
         }} />
 
-        {/* Animated Background LED Glows */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <motion.div 
-            animate={{ 
-              opacity: [0.05, 0.15, 0.05],
-            }}
-            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            className={`absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[120px] ${theme === 'blue' ? 'bg-[#0066FF]' : 'bg-[#00FF66]'} will-change-[opacity]`}
+        {/* Animated Background LED Glows - Simplified for performance */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+          <div 
+            className={`absolute top-1/4 left-1/4 w-[400px] h-[400px] rounded-full blur-[100px] opacity-[0.08] ${theme === 'blue' ? 'bg-[#0066FF]' : 'bg-[#00FF66]'}`}
           />
-          <motion.div 
-            animate={{ 
-              opacity: [0.05, 0.1, 0.05],
-            }}
-            transition={{ duration: 10, repeat: Infinity, ease: "linear", delay: 1 }}
-            className={`absolute bottom-1/4 right-1/4 w-[600px] h-[600px] rounded-full blur-[120px] ${theme === 'blue' ? 'bg-[#00FF66]' : 'bg-[#0066FF]'} will-change-[opacity]`}
+          <div 
+            className={`absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] opacity-[0.06] ${theme === 'blue' ? 'bg-[#00FF66]' : 'bg-[#0066FF]'}`}
           />
         </div>
 
@@ -388,21 +380,19 @@ export default function App() {
           transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
           className="w-full max-w-md relative z-10"
         >
-          {/* Login Card with LED Border */}
-          <div className={`relative p-[2px] rounded-3xl overflow-hidden group`}>
-            {/* LED Border Animation */}
-            <motion.div 
-              animate={{ 
-                rotate: 360 
-              }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-[-100%] z-0 will-change-transform"
-              style={{
-                background: `conic-gradient(from 0deg, transparent, ${theme === 'blue' ? '#0066FF' : '#00FF66'}, transparent 40%)`
-              }}
-            />
-            
-            <div className="relative z-10 bg-[#0a0a0a]/90 backdrop-blur-2xl rounded-[22px] p-10 shadow-2xl border border-white/5">
+          {/* Login Card with LED Effect */}
+          <motion.div 
+            animate={{ 
+              boxShadow: [
+                `0 0 20px ${theme === 'blue' ? 'rgba(0,102,255,0.1)' : 'rgba(0,255,102,0.1)'}`,
+                `0 0 40px ${theme === 'blue' ? 'rgba(0,102,255,0.2)' : 'rgba(0,255,102,0.2)'}`,
+                `0 0 20px ${theme === 'blue' ? 'rgba(0,102,255,0.1)' : 'rgba(0,255,102,0.1)'}`
+              ]
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className={`relative p-[1px] rounded-3xl overflow-hidden group bg-white/10`}
+          >
+            <div className="relative z-10 bg-[#0a0a0a]/95 backdrop-blur-xl rounded-[23px] p-10 shadow-2xl border border-white/5">
               <div className="text-center mb-10">
                 <motion.div
                   initial={{ y: -20, opacity: 0 }}
@@ -466,11 +456,11 @@ export default function App() {
                 </div>
 
                 <motion.button
-                  whileHover={{ scale: 1.01, boxShadow: `0 0 15px ${theme === 'blue' ? 'rgba(0,102,255,0.2)' : 'rgba(0,255,102,0.2)'}` }}
+                  whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full py-4 rounded-xl font-black text-xs tracking-[0.2em] shadow-2xl transition-all disabled:opacity-50 bg-zinc-100 hover:bg-white text-black relative overflow-hidden group/btn`}
+                  className={`w-full py-4 rounded-xl font-black text-xs tracking-[0.2em] transition-all disabled:opacity-50 bg-zinc-100 hover:bg-white text-black relative overflow-hidden group/btn`}
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     {isLoading ? (
@@ -519,7 +509,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
           
           <motion.p 
             initial={{ opacity: 0 }}
