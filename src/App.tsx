@@ -44,7 +44,7 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
-  const [isLowEndMode, setIsLowEndMode] = useState(false);
+  const [isLowEndMode, setIsLowEndMode] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -365,49 +365,68 @@ export default function App() {
             onClick={() => setIsLowEndMode(!isLowEndMode)}
             className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest ${
               isLowEndMode 
-                ? 'bg-white text-black border-white' 
+                ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
                 : 'bg-black/40 text-white border-white/20 hover:border-white/40'
             }`}
           >
             <Cpu className="w-3 h-3" />
-            {isLowEndMode ? 'Modo GPU Ativo' : 'Otimizar GPU'}
+            {isLowEndMode ? 'Modo Econômico (GPU)' : 'Modo Visual (LED)'}
           </button>
         </div>
 
-        {/* LED Background Grid - Simplified */}
-        {!isLowEndMode && (
-          <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]" />
-        )}
+        {/* LED Background Grid */}
+        <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]" />
 
-        {/* Animated Background LED Glows - Simplified for performance */}
+        {/* Animated Background LED Glows */}
         {!isLowEndMode && (
           <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-            <div 
-              className={`absolute top-1/4 left-1/4 w-[400px] h-[400px] rounded-full blur-[100px] opacity-[0.08] ${theme === 'blue' ? 'bg-[#0066FF]' : 'bg-[#00FF66]'}`}
+            <motion.div 
+              animate={{ 
+                opacity: [0.05, 0.2, 0.05],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              className={`absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[120px] ${theme === 'blue' ? 'bg-[#0066FF]' : 'bg-[#00FF66]'} will-change-[opacity,transform]`}
             />
-            <div 
-              className={`absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] opacity-[0.06] ${theme === 'blue' ? 'bg-[#00FF66]' : 'bg-[#0066FF]'}`}
+            <motion.div 
+              animate={{ 
+                opacity: [0.05, 0.15, 0.05],
+                scale: [1, 1.3, 1],
+              }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              className={`absolute bottom-1/4 right-1/4 w-[600px] h-[600px] rounded-full blur-[120px] ${theme === 'blue' ? 'bg-[#00FF66]' : 'bg-[#0066FF]'} will-change-[opacity,transform]`}
             />
           </div>
         )}
 
         <motion.div
-          initial={isLowEndMode ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={isLowEndMode ? { duration: 0 } : { duration: 0.4, ease: "easeOut" }}
+          initial={isLowEndMode ? { opacity: 1, y: 0 } : { opacity: 0, scale: 0.9, y: 30 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={isLowEndMode ? { duration: 0 } : { duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
           className="w-full max-w-md relative z-10"
         >
-          {/* Login Card with Static LED Effect */}
+          {/* Login Card with LED Effect */}
           <div 
-            className={`relative p-[1px] rounded-3xl overflow-hidden group bg-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)]`}
+            className={`relative p-[2px] rounded-3xl overflow-hidden group ${isLowEndMode ? 'bg-white/10' : 'bg-transparent'}`}
           >
-            <div className="relative z-10 bg-[#0a0a0a] rounded-[23px] p-10 border border-white/5">
+            {!isLowEndMode && (
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-[-100%] z-0 will-change-transform"
+                style={{
+                  background: `conic-gradient(from 0deg, transparent, ${theme === 'blue' ? '#0066FF' : '#00FF66'}, transparent 40%)`
+                }}
+              />
+            )}
+            
+            <div className={`relative z-10 bg-[#0a0a0a] ${!isLowEndMode ? 'backdrop-blur-2xl bg-[#0a0a0a]/90' : ''} rounded-[22px] p-10 shadow-2xl border border-white/5`}>
               <div className="text-center mb-10">
                 <motion.div
-                  initial={isLowEndMode ? { opacity: 1 } : { opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={isLowEndMode ? { duration: 0 } : { duration: 0.5 }}
-                  className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl ${current.accent} text-white mb-6 relative z-10 ${current.glow}`}
+                  initial={isLowEndMode ? { opacity: 1, y: 0 } : { y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={isLowEndMode ? { duration: 0 } : { type: "spring", stiffness: 300, damping: 20 }}
+                  className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl ${current.accent} text-white mb-6 relative z-10 ${current.glow} ${!isLowEndMode ? 'shadow-[0_0_30px_rgba(0,0,0,0.5)]' : ''}`}
                 >
                   {current.icon}
                 </motion.div>
