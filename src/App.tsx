@@ -358,11 +358,8 @@ export default function App() {
       <div 
         className="min-h-screen flex items-center justify-center p-6 bg-[#050505] relative overflow-hidden"
       >
-        {/* LED Background Grid */}
-        <div className="absolute inset-0 z-0 opacity-20" style={{ 
-          backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)',
-          backgroundSize: '24px 24px'
-        }} />
+        {/* LED Background Grid - Simplified */}
+        <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]" />
 
         {/* Animated Background LED Glows - Simplified for performance */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
@@ -375,30 +372,22 @@ export default function App() {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 30 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
           className="w-full max-w-md relative z-10"
         >
-          {/* Login Card with LED Effect */}
-          <motion.div 
-            animate={{ 
-              boxShadow: [
-                `0 0 20px ${theme === 'blue' ? 'rgba(0,102,255,0.1)' : 'rgba(0,255,102,0.1)'}`,
-                `0 0 40px ${theme === 'blue' ? 'rgba(0,102,255,0.2)' : 'rgba(0,255,102,0.2)'}`,
-                `0 0 20px ${theme === 'blue' ? 'rgba(0,102,255,0.1)' : 'rgba(0,255,102,0.1)'}`
-              ]
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className={`relative p-[1px] rounded-3xl overflow-hidden group bg-white/10`}
+          {/* Login Card with Static LED Effect */}
+          <div 
+            className={`relative p-[1px] rounded-3xl overflow-hidden group bg-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)]`}
           >
-            <div className="relative z-10 bg-[#0a0a0a]/95 backdrop-blur-xl rounded-[23px] p-10 shadow-2xl border border-white/5">
+            <div className="relative z-10 bg-[#0a0a0a] rounded-[23px] p-10 border border-white/5">
               <div className="text-center mb-10">
                 <motion.div
-                  initial={{ y: -20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl ${current.accent} text-white shadow-[0_0_30px_rgba(0,0,0,0.5)] mb-6 relative z-10 ${current.glow}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl ${current.accent} text-white mb-6 relative z-10 ${current.glow}`}
                 >
                   {current.icon}
                 </motion.div>
@@ -509,7 +498,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
           
           <motion.p 
             initial={{ opacity: 0 }}
