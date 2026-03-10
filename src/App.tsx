@@ -4,7 +4,7 @@ import {
   Mail, Lock, LogIn, Github, Chrome, Play, Music, 
   Heart, History, List, LogOut, User as UserIcon, 
   Search, Plus, Upload, ChevronRight, ChevronLeft, ArrowLeft, Settings,
-  Volume2, Maximize, Pause, SkipForward, SkipBack,
+  Volume2, Maximize, Pause, SkipForward, SkipBack, Cpu,
   Film, Tv, Monitor, Info, X, LayoutGrid, Star, Trash2
 } from 'lucide-react';
 import { auth, githubProvider, db } from './lib/firebase';
@@ -44,6 +44,7 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isLowEndMode, setIsLowEndMode] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -358,23 +359,42 @@ export default function App() {
       <div 
         className="min-h-screen flex items-center justify-center p-6 bg-[#050505] relative overflow-hidden"
       >
-        {/* LED Background Grid - Simplified */}
-        <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]" />
-
-        {/* Animated Background LED Glows - Simplified for performance */}
-        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-          <div 
-            className={`absolute top-1/4 left-1/4 w-[400px] h-[400px] rounded-full blur-[100px] opacity-[0.08] ${theme === 'blue' ? 'bg-[#0066FF]' : 'bg-[#00FF66]'}`}
-          />
-          <div 
-            className={`absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] opacity-[0.06] ${theme === 'blue' ? 'bg-[#00FF66]' : 'bg-[#0066FF]'}`}
-          />
+        {/* Low-End Mode Toggle Button */}
+        <div className="absolute top-6 left-6 z-50">
+          <button
+            onClick={() => setIsLowEndMode(!isLowEndMode)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest ${
+              isLowEndMode 
+                ? 'bg-white text-black border-white' 
+                : 'bg-black/40 text-white border-white/20 hover:border-white/40'
+            }`}
+          >
+            <Cpu className="w-3 h-3" />
+            {isLowEndMode ? 'Modo GPU Ativo' : 'Otimizar GPU'}
+          </button>
         </div>
 
+        {/* LED Background Grid - Simplified */}
+        {!isLowEndMode && (
+          <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]" />
+        )}
+
+        {/* Animated Background LED Glows - Simplified for performance */}
+        {!isLowEndMode && (
+          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+            <div 
+              className={`absolute top-1/4 left-1/4 w-[400px] h-[400px] rounded-full blur-[100px] opacity-[0.08] ${theme === 'blue' ? 'bg-[#0066FF]' : 'bg-[#00FF66]'}`}
+            />
+            <div 
+              className={`absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] opacity-[0.06] ${theme === 'blue' ? 'bg-[#00FF66]' : 'bg-[#0066FF]'}`}
+            />
+          </div>
+        )}
+
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={isLowEndMode ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+          transition={isLowEndMode ? { duration: 0 } : { duration: 0.4, ease: "easeOut" }}
           className="w-full max-w-md relative z-10"
         >
           {/* Login Card with Static LED Effect */}
@@ -384,9 +404,9 @@ export default function App() {
             <div className="relative z-10 bg-[#0a0a0a] rounded-[23px] p-10 border border-white/5">
               <div className="text-center mb-10">
                 <motion.div
-                  initial={{ opacity: 0 }}
+                  initial={isLowEndMode ? { opacity: 1 } : { opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
+                  transition={isLowEndMode ? { duration: 0 } : { duration: 0.5 }}
                   className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl ${current.accent} text-white mb-6 relative z-10 ${current.glow}`}
                 >
                   {current.icon}
