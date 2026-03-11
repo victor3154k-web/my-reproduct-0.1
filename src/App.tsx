@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Mail, Lock, LogIn, Github, Chrome, Play, Music, 
@@ -54,6 +54,7 @@ export default function App() {
   const [selectedInfoVideo, setSelectedInfoVideo] = useState<VideoItem | null>(null);
   const [currentVideo, setCurrentVideo] = useState<VideoItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   
   // State for user data
   const [history, setHistory] = useState<VideoItem[]>([]);
@@ -76,6 +77,52 @@ export default function App() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+
+  const defaultHeroVideos: VideoItem[] = [
+    { 
+      id: 'hero-1', 
+      title: 'A JORNADA', 
+      url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', 
+      thumbnail: 'https://picsum.photos/seed/netflix-hero/1920/1080', 
+      type: 'hls', 
+      category: 'Sci-Fi',
+      description: 'Em um futuro distópico, um grupo de sobreviventes descobre um sinal vindo de uma estação espacial abandonada que pode mudar o destino da humanidade.'
+    },
+    {
+      id: 'hero-2',
+      title: 'NEON NIGHTS',
+      url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+      thumbnail: 'https://picsum.photos/seed/neon/1920/1080',
+      type: 'hls',
+      category: 'Ação',
+      description: 'As luzes da cidade escondem segredos que apenas os mais corajosos ousam enfrentar. Uma perseguição implacável começa agora.'
+    },
+    {
+      id: 'hero-3',
+      title: 'CYBERPUNK 2077',
+      url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+      thumbnail: 'https://picsum.photos/seed/cyber/1920/1080',
+      type: 'hls',
+      category: 'Cyberpunk',
+      description: 'A tecnologia avançou, mas a humanidade ficou para trás. Explore as ruas perigosas de Night City.'
+    }
+  ];
+
+  const heroVideos = useMemo(() => {
+    const combined = [...favorites, ...history.slice(0, 5), ...defaultHeroVideos];
+    // Remove duplicates by ID
+    return combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+  }, [favorites, history]);
+
+  useEffect(() => {
+    if (heroVideos.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentHeroIndex(prev => (prev + 1) % heroVideos.length);
+    }, 8000); // Change every 8 seconds
+    return () => clearInterval(interval);
+  }, [heroVideos]);
+
+  const currentHero = heroVideos[currentHeroIndex] || defaultHeroVideos[0];
 
   // Automatic theme cycling
   useEffect(() => {
@@ -765,45 +812,69 @@ export default function App() {
             </div>
           ) : (
             <>
-              <div className="absolute inset-0">
-                <img 
-                  src="https://picsum.photos/seed/netflix-hero/1920/1080" 
-                  className="w-full h-full object-cover" 
-                  alt="Featured"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
-                <div className={`absolute inset-0 bg-gradient-to-t ${m.header.replace('from-black', 'from-' + (mode === 'light' ? 'white' : 'black'))} via-transparent to-transparent`} />
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={currentHero.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1 }}
+                  className="absolute inset-0"
+                >
+                  <img 
+                    src={currentHero.thumbnail || 'https://picsum.photos/seed/netflix-hero/1920/1080'} 
+                    className="w-full h-full object-cover" 
+                    alt={currentHero.title}
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
+                  <div className={`absolute inset-0 bg-gradient-to-t ${m.header.replace('from-black', 'from-' + (mode === 'light' ? 'white' : 'black'))} via-transparent to-transparent`} />
+                </motion.div>
+              </AnimatePresence>
 
-              <div className="absolute bottom-[15%] left-4 md:left-12 max-w-xl space-y-4 md:space-y-6">
-                <div className="flex items-center gap-2">
-                  <div className="bg-[#E50914] p-0.5 rounded-sm">
-                    <Play className="w-3 h-3 fill-current text-white" />
-                  </div>
-                  <span className={`text-xs font-bold tracking-widest uppercase ${m.muted}`}>Original Lumina</span>
-                </div>
-                
-                <h2 className="text-4xl md:text-7xl font-black tracking-tighter leading-none">A JORNADA</h2>
-                
-                <p className={`text-sm md:text-lg ${m.text} font-medium line-clamp-3 md:line-clamp-none drop-shadow-lg`}>
-                  Em um futuro distópico, um grupo de sobreviventes descobre um sinal vindo de uma estação espacial abandonada que pode mudar o destino da humanidade.
-                </p>
+              <div className="absolute bottom-[15%] left-4 md:left-12 max-w-xl space-y-4 md:space-y-6 z-10">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentHero.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="bg-[#E50914] p-0.5 rounded-sm">
+                        <Play className="w-3 h-3 fill-current text-white" />
+                      </div>
+                      <span className={`text-xs font-bold tracking-widest uppercase ${m.muted}`}>
+                        {currentHero.category || 'Original Lumina'}
+                      </span>
+                    </div>
+                    
+                    <h2 className="text-4xl md:text-7xl font-black tracking-tighter leading-none uppercase">
+                      {currentHero.title}
+                    </h2>
+                    
+                    <p className={`text-sm md:text-lg ${m.text} font-medium line-clamp-3 md:line-clamp-none drop-shadow-lg`}>
+                      {currentHero.description || 'Uma história épica de coragem e descoberta em um universo em constante expansão.'}
+                    </p>
 
-                <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => setCurrentVideo({ id: 'hero', title: 'A Jornada', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', thumbnail: '', type: 'hls' })}
-                    className="flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 bg-white text-black rounded font-bold hover:bg-white/90 transition-colors"
-                  >
-                    <Play className="w-5 h-5 fill-current" /> Assistir
-                  </button>
-                  <button 
-                    onClick={() => setSelectedInfoVideo({ id: 'hero', title: 'A Jornada', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', thumbnail: 'https://picsum.photos/seed/netflix-hero/1920/1080', type: 'hls', category: 'Sci-Fi' })}
-                    className="flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 bg-zinc-500/50 text-white rounded font-bold hover:bg-zinc-500/70 transition-colors backdrop-blur-md"
-                  >
-                    <Info className="w-5 h-5" /> Mais informações
-                  </button>
-                </div>
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => setCurrentVideo(currentHero)}
+                        className="flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 bg-white text-black rounded font-bold hover:bg-white/90 transition-colors"
+                      >
+                        <Play className="w-5 h-5 fill-current" /> Assistir
+                      </button>
+                      <button 
+                        onClick={() => setSelectedInfoVideo(currentHero)}
+                        className={`flex items-center gap-2 px-6 md:px-8 py-2 md:py-3 ${m.input} ${m.text} rounded font-bold hover:bg-white/20 transition-colors backdrop-blur-md border ${m.border}`}
+                      >
+                        <Info className="w-5 h-5" /> Mais informações
+                      </button>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </>
           )}
