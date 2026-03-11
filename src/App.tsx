@@ -40,6 +40,7 @@ export default function App() {
   const [theme, setTheme] = useState<'blue' | 'emerald'>('blue');
   const [isHovered, setIsHovered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -100,6 +101,7 @@ export default function App() {
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      setIsInitializing(false);
       if (!currentUser) {
         // Clear local state on logout
         setHistory([]);
@@ -385,6 +387,18 @@ export default function App() {
   };
 
   const current = themeConfig[theme];
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full"
+        />
+      </div>
+    );
+  }
 
   // Login Screen (Original Theme)
   if (!user) {
