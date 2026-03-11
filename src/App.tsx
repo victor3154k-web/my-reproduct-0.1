@@ -49,6 +49,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsView, setSettingsView] = useState<'main' | 'add'>('main');
   const [selectedInfoVideo, setSelectedInfoVideo] = useState<VideoItem | null>(null);
   const [currentVideo, setCurrentVideo] = useState<VideoItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -1041,241 +1042,310 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowSettings(false)}
+              onClick={() => {
+                setShowSettings(false);
+                setTimeout(() => setSettingsView('main'), 300);
+              }}
               className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-[#181818] border border-white/10 rounded-lg shadow-2xl overflow-hidden"
+              className="relative w-full max-w-lg bg-[#121212] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-                <h2 className="text-xl font-bold">Configurações</h2>
-                <button onClick={() => setShowSettings(false)} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-white/5">
+                <div className="flex items-center gap-3">
+                  {settingsView === 'add' && (
+                    <button 
+                      onClick={() => setSettingsView('main')}
+                      className="p-1 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+                  )}
+                  <h2 className="text-xl font-display font-black tracking-tight">
+                    {settingsView === 'main' ? 'CONFIGURAÇÕES' : 'ADICIONAR CONTEÚDO'}
+                  </h2>
+                </div>
+                <button onClick={() => {
+                  setShowSettings(false);
+                  setTimeout(() => setSettingsView('main'), 300);
+                }} className="p-1 hover:bg-white/10 rounded-full transition-colors">
                   <X className="w-6 h-6" />
                 </button>
               </div>
 
-              <div className="p-6 space-y-6">
-                {user && (
-                  <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${
-                        syncStatus === 'synced' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 
-                        syncStatus === 'syncing' ? 'bg-yellow-500 animate-pulse' : 
-                        'bg-red-500'
-                      }`} />
-                      <span className="text-xs font-bold text-zinc-300">
-                        Status da Nuvem: {
-                          syncStatus === 'synced' ? 'Sincronizado' : 
-                          syncStatus === 'syncing' ? 'Sincronizando...' : 
-                          syncStatus === 'offline' ? 'Firebase não configurado' :
-                          'Erro na Sincronização'
-                        }
-                      </span>
-                    </div>
-                    {syncStatus === 'error' && (
-                      <span className="text-[10px] text-red-400 max-w-[150px] text-right">
-                        Verifique se o Firestore está ativo no console.
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Adicionar Novo Conteúdo</h3>
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-zinc-500">Título do Vídeo</label>
-                      <input 
-                        type="text" 
-                        value={newVideoTitle}
-                        onChange={(e) => setNewVideoTitle(e.target.value)}
-                        placeholder="Ex: Minha Live Favorita"
-                        className="w-full bg-black/40 border border-white/10 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-white transition-colors"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-zinc-500">URL (HLS ou MP4)</label>
-                      <input 
-                        type="text" 
-                        value={newVideoUrl}
-                        onChange={(e) => setNewVideoUrl(e.target.value)}
-                        placeholder="https://exemplo.com/video.m3u8"
-                        className="w-full bg-black/40 border border-white/10 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-white transition-colors"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-zinc-500">URL da Thumbnail (Opcional)</label>
-                      <input 
-                        type="text" 
-                        value={newVideoThumbnail}
-                        onChange={(e) => setNewVideoThumbnail(e.target.value)}
-                        placeholder="https://exemplo.com/imagem.jpg"
-                        className="w-full bg-black/40 border border-white/10 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-white transition-colors"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-zinc-500">Ou Upload do Dispositivo</label>
-                      <div className="flex items-center gap-2">
-                        <label className="flex-1 cursor-pointer bg-black/40 border border-white/10 rounded px-4 py-2 text-sm hover:bg-white/5 transition-colors flex items-center gap-2">
-                          <Upload className="w-4 h-4 text-zinc-400" />
-                          <span className="text-zinc-400 truncate">
-                            {newVideoThumbnailFile ? newVideoThumbnailFile.name : 'Selecionar imagem...'}
-                          </span>
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="hidden" 
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                setNewVideoThumbnailFile(file);
-                                setNewVideoThumbnail(''); // Clear URL if file is selected
+              <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                {settingsView === 'main' ? (
+                  <div className="space-y-6">
+                    {user && (
+                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${
+                            syncStatus === 'synced' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]' : 
+                            syncStatus === 'syncing' ? 'bg-yellow-500 animate-pulse' : 
+                            'bg-red-500'
+                          }`} />
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status da Nuvem</span>
+                            <span className="text-xs font-bold text-zinc-200">
+                              {
+                                syncStatus === 'synced' ? 'Sincronizado' : 
+                                syncStatus === 'syncing' ? 'Sincronizando...' : 
+                                syncStatus === 'offline' ? 'Firebase não configurado' :
+                                'Erro na Sincronização'
                               }
-                            }}
-                          />
-                        </label>
-                        {newVideoThumbnailFile && (
-                          <button 
-                            onClick={() => setNewVideoThumbnailFile(null)}
-                            className="p-2 hover:bg-white/10 rounded-full text-zinc-500"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                            </span>
+                          </div>
+                        </div>
+                        {syncStatus === 'error' && (
+                          <span className="text-[10px] text-red-400 max-w-[150px] text-right font-bold">
+                            Verifique o Console Firestore.
+                          </span>
                         )}
                       </div>
-                    </div>
+                    )}
 
-                    <div className="pt-2">
+                    <div className="space-y-2">
+                      <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-4">Biblioteca Pessoal</h3>
                       <button 
-                        onClick={() => setShowAdvanced(!showAdvanced)}
-                        className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors"
+                        onClick={() => setSettingsView('add')}
+                        className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-all group"
                       >
-                        <Settings className={`w-3 h-3 transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
-                        Opções Avançadas (Elenco, Gênero, etc.)
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Plus className="w-5 h-5" />
+                          </div>
+                          <div className="flex flex-col items-start">
+                            <span className="text-sm font-bold">Adicionar Filmes ou Vídeos</span>
+                            <span className="text-[10px] text-zinc-500 font-medium">HLS, MP4 ou Links Externos</span>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-white transition-colors" />
                       </button>
                     </div>
 
-                    <AnimatePresence>
-                      {showAdvanced && (
-                        <motion.div 
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="space-y-3 overflow-hidden"
-                        >
-                          <div className="space-y-1">
-                            <label className="text-xs font-medium text-zinc-500">Gênero</label>
-                            <input 
-                              type="text" 
-                              value={newVideoGenre}
-                              onChange={(e) => setNewVideoGenre(e.target.value)}
-                              placeholder="Ex: Ação, Sci-Fi"
-                              className="w-full bg-black/40 border border-white/10 rounded px-4 py-2 text-sm focus:outline-none focus:border-white transition-colors"
-                            />
+                    <div className="space-y-2">
+                      <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-4">Preferências</h3>
+                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+                            <Cpu className="w-5 h-5" />
                           </div>
-                          <div className="space-y-1">
-                            <label className="text-xs font-medium text-zinc-500">Elenco</label>
-                            <input 
-                              type="text" 
-                              value={newVideoCast}
-                              onChange={(e) => setNewVideoCast(e.target.value)}
-                              placeholder="Ex: Ator 1, Atriz 2"
-                              className="w-full bg-black/40 border border-white/10 rounded px-4 py-2 text-sm focus:outline-none focus:border-white transition-colors"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs font-medium text-zinc-500">Ano de Lançamento</label>
-                            <input 
-                              type="text" 
-                              value={newVideoYear}
-                              onChange={(e) => setNewVideoYear(e.target.value)}
-                              placeholder="Ex: 2026"
-                              className="w-full bg-black/40 border border-white/10 rounded px-4 py-2 text-sm focus:outline-none focus:border-white transition-colors"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs font-medium text-zinc-500">Descrição / Sinopse</label>
-                            <textarea 
-                              value={newVideoDescription}
-                              onChange={(e) => setNewVideoDescription(e.target.value)}
-                              placeholder="Conte um pouco sobre o vídeo..."
-                              rows={3}
-                              className="w-full bg-black/40 border border-white/10 rounded px-4 py-2 text-sm focus:outline-none focus:border-white transition-colors resize-none"
-                            />
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    <button 
-                      onClick={() => {
-                        if (!newVideoTitle || !newVideoUrl) return;
-                        const isHls = newVideoUrl.includes('.m3u8');
-                        
-                        let finalThumbnail = newVideoThumbnail || `https://picsum.photos/seed/${newVideoTitle}/600/338`;
-                        if (newVideoThumbnailFile) {
-                          finalThumbnail = URL.createObjectURL(newVideoThumbnailFile);
-                        }
-
-                        const newVideo: VideoItem = {
-                          id: Math.random().toString(36).substr(2, 9),
-                          title: newVideoTitle,
-                          url: newVideoUrl,
-                          thumbnail: finalThumbnail,
-                          type: isHls ? 'hls' : 'mp4',
-                          category: newVideoGenre || 'Adicionado',
-                          cast: newVideoCast,
-                          description: newVideoDescription,
-                          year: newVideoYear
-                        };
-                        setCustomVideos(prev => [newVideo, ...prev]);
-                        setNewVideoTitle('');
-                        setNewVideoUrl('');
-                        setNewVideoThumbnail('');
-                        setNewVideoThumbnailFile(null);
-                        setNewVideoCast('');
-                        setNewVideoGenre('');
-                        setNewVideoDescription('');
-                        setNewVideoYear('2026');
-                        setShowAdvanced(false);
-                        alert('Vídeo adicionado com sucesso!');
-                      }}
-                      className="w-full bg-white text-black font-bold py-2.5 rounded hover:bg-white/90 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" /> Adicionar à Biblioteca
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-4 pt-4 border-t border-white/10">
-                  <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Seus Vídeos Adicionados</h3>
-                  <div className="max-h-48 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                    {customVideos.length > 0 ? customVideos.map(video => (
-                      <div key={video.id} className="flex items-center justify-between p-3 bg-white/5 rounded border border-white/5 group">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 aspect-video rounded overflow-hidden bg-black">
-                            <img src={video.thumbnail} alt="" className="w-full h-full object-cover" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold truncate w-40">{video.title}</p>
-                            <p className="text-[10px] text-zinc-500 uppercase">{video.type}</p>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold">Modo de Performance</span>
+                            <span className="text-[10px] text-zinc-500 font-medium">Otimizar para dispositivos lentos</span>
                           </div>
                         </div>
                         <button 
-                          onClick={() => setCustomVideos(prev => prev.filter(v => v.id !== video.id))}
-                          className="p-2 text-zinc-500 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                          onClick={() => setIsLowEndMode(!isLowEndMode)}
+                          className={`w-12 h-6 rounded-full transition-colors relative ${isLowEndMode ? 'bg-white' : 'bg-zinc-800'}`}
                         >
-                          <X className="w-4 h-4" />
+                          <div className={`absolute top-1 w-4 h-4 rounded-full transition-all ${isLowEndMode ? 'right-1 bg-black' : 'left-1 bg-zinc-400'}`} />
                         </button>
                       </div>
-                    )) : (
-                      <p className="text-xs text-zinc-600 italic">Nenhum vídeo adicionado manualmente.</p>
-                    )}
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-white/5">
+                      <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-4">Seus Vídeos Adicionados</h3>
+                      <div className="space-y-2">
+                        {customVideos.length > 0 ? customVideos.map(video => (
+                          <div key={video.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 group">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 aspect-video rounded-lg overflow-hidden bg-black">
+                                <img src={video.thumbnail} alt="" className="w-full h-full object-cover" />
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold truncate w-40">{video.title}</p>
+                                <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">{video.type}</p>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => setCustomVideos(prev => prev.filter(v => v.id !== video.id))}
+                              className="p-2 text-zinc-500 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )) : (
+                          <p className="text-xs text-zinc-600 italic text-center py-4">Nenhum vídeo adicionado manualmente.</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Título do Vídeo</label>
+                        <input 
+                          type="text" 
+                          value={newVideoTitle}
+                          onChange={(e) => setNewVideoTitle(e.target.value)}
+                          placeholder="Ex: Minha Live Favorita"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all placeholder:text-zinc-700 font-medium"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">URL (HLS ou MP4)</label>
+                        <input 
+                          type="text" 
+                          value={newVideoUrl}
+                          onChange={(e) => setNewVideoUrl(e.target.value)}
+                          placeholder="https://exemplo.com/video.m3u8"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all placeholder:text-zinc-700 font-medium"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">URL da Thumbnail (Opcional)</label>
+                        <input 
+                          type="text" 
+                          value={newVideoThumbnail}
+                          onChange={(e) => setNewVideoThumbnail(e.target.value)}
+                          placeholder="https://exemplo.com/imagem.jpg"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all placeholder:text-zinc-700 font-medium"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Ou Upload do Dispositivo</label>
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 cursor-pointer bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm hover:bg-white/10 transition-all flex items-center gap-2">
+                            <Upload className="w-4 h-4 text-zinc-400" />
+                            <span className="text-zinc-500 truncate font-medium">
+                              {newVideoThumbnailFile ? newVideoThumbnailFile.name : 'Selecionar imagem...'}
+                            </span>
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              className="hidden" 
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setNewVideoThumbnailFile(file);
+                                  setNewVideoThumbnail(''); 
+                                }
+                              }}
+                            />
+                          </label>
+                          {newVideoThumbnailFile && (
+                            <button 
+                              onClick={() => setNewVideoThumbnailFile(null)}
+                              className="p-3 bg-white/5 hover:bg-white/10 rounded-xl text-zinc-500 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="pt-2">
+                        <button 
+                          onClick={() => setShowAdvanced(!showAdvanced)}
+                          className="flex items-center gap-2 text-[10px] font-black text-zinc-500 hover:text-white transition-colors uppercase tracking-widest"
+                        >
+                          <Settings className={`w-3 h-3 transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
+                          Opções Avançadas
+                        </button>
+                      </div>
+
+                      <AnimatePresence>
+                        {showAdvanced && (
+                          <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="space-y-4 overflow-hidden pt-2"
+                          >
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Gênero</label>
+                                <input 
+                                  type="text" 
+                                  value={newVideoGenre}
+                                  onChange={(e) => setNewVideoGenre(e.target.value)}
+                                  placeholder="Ex: Ação"
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/30 transition-all"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Ano</label>
+                                <input 
+                                  type="text" 
+                                  value={newVideoYear}
+                                  onChange={(e) => setNewVideoYear(e.target.value)}
+                                  placeholder="Ex: 2026"
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/30 transition-all"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Elenco</label>
+                              <input 
+                                type="text" 
+                                value={newVideoCast}
+                                onChange={(e) => setNewVideoCast(e.target.value)}
+                                placeholder="Ex: Ator 1, Atriz 2"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/30 transition-all"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Sinopse</label>
+                              <textarea 
+                                value={newVideoDescription}
+                                onChange={(e) => setNewVideoDescription(e.target.value)}
+                                placeholder="Conte um pouco sobre o vídeo..."
+                                rows={3}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/30 transition-all resize-none"
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      <motion.button 
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        onClick={() => {
+                          if (!newVideoTitle || !newVideoUrl) return;
+                          const isHls = newVideoUrl.includes('.m3u8');
+                          
+                          let finalThumbnail = newVideoThumbnail || `https://picsum.photos/seed/${newVideoTitle}/600/338`;
+                          if (newVideoThumbnailFile) {
+                            finalThumbnail = URL.createObjectURL(newVideoThumbnailFile);
+                          }
+
+                          const newVideo: VideoItem = {
+                            id: Math.random().toString(36).substr(2, 9),
+                            title: newVideoTitle,
+                            url: newVideoUrl,
+                            thumbnail: finalThumbnail,
+                            type: isHls ? 'hls' : 'mp4',
+                            category: newVideoGenre || 'Adicionado',
+                            cast: newVideoCast,
+                            description: newVideoDescription,
+                            year: newVideoYear
+                          };
+                          setCustomVideos(prev => [newVideo, ...prev]);
+                          setNewVideoTitle('');
+                          setNewVideoUrl('');
+                          setNewVideoThumbnail('');
+                          setNewVideoThumbnailFile(null);
+                          setNewVideoCast('');
+                          setNewVideoGenre('');
+                          setNewVideoDescription('');
+                          setNewVideoYear('2026');
+                          setShowAdvanced(false);
+                          alert('Vídeo adicionado com sucesso!');
+                          setSettingsView('main');
+                        }}
+                        className="w-full bg-white text-black font-black text-[10px] tracking-[0.2em] py-4 rounded-xl hover:bg-white/90 transition-all flex items-center justify-center gap-2 uppercase"
+                      >
+                        <Plus className="w-4 h-4" /> Adicionar à Biblioteca
+                      </motion.button>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
