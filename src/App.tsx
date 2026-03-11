@@ -4,7 +4,7 @@ import {
   Mail, Lock, LogIn, Github, Chrome, Play, Music, 
   Heart, History, List, LogOut, User as UserIcon, 
   Search, Plus, Upload, ChevronRight, ChevronLeft, ArrowLeft, Settings,
-  Volume2, Maximize, Pause, SkipForward, SkipBack, Cpu,
+  Volume2, Maximize, Pause, SkipForward, SkipBack, Cpu, RotateCw,
   Film, Tv, Monitor, Info, X, LayoutGrid, Star, Trash2
 } from 'lucide-react';
 import { auth, githubProvider, googleProvider, db } from './lib/firebase';
@@ -53,6 +53,7 @@ export default function App() {
   const [settingsView, setSettingsView] = useState<'main' | 'add'>('main');
   const [selectedInfoVideo, setSelectedInfoVideo] = useState<VideoItem | null>(null);
   const [currentVideo, setCurrentVideo] = useState<VideoItem | null>(null);
+  const [videoRotation, setVideoRotation] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   
@@ -833,19 +834,29 @@ export default function App() {
         {/* Billboard / Hero Section */}
         <section className="relative h-[56.25vw] md:h-[80vh] w-full overflow-hidden">
           {currentVideo ? (
-            <div className="absolute inset-0 bg-black z-50">
+            <div className="absolute inset-0 bg-black z-50 flex items-center justify-center overflow-hidden">
               <video 
                 ref={videoRef}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain transition-transform duration-300"
+                style={{ transform: `rotate(${videoRotation}deg)` }}
                 controls
                 autoPlay
               />
-              <button 
-                onClick={() => setCurrentVideo(null)}
-                className="absolute top-6 left-6 md:top-10 md:left-12 flex items-center gap-2 px-4 py-2 bg-black/50 rounded-md hover:bg-black/70 transition-colors z-20 text-white font-bold backdrop-blur-md border border-white/10"
-              >
-                <ArrowLeft className="w-5 h-5" /> Voltar
-              </button>
+              <div className="absolute top-6 left-6 md:top-10 md:left-12 flex items-center gap-3 z-20">
+                <button 
+                  onClick={() => { setCurrentVideo(null); setVideoRotation(0); }}
+                  className="flex items-center gap-2 px-4 py-2 bg-black/50 rounded-md hover:bg-black/70 transition-colors text-white font-bold backdrop-blur-md border border-white/10"
+                >
+                  <ArrowLeft className="w-5 h-5" /> Voltar
+                </button>
+                <button 
+                  onClick={() => setVideoRotation(prev => (prev + 90) % 360)}
+                  className="flex items-center gap-2 px-4 py-2 bg-black/50 rounded-md hover:bg-black/70 transition-colors text-white font-bold backdrop-blur-md border border-white/10"
+                  title="Rotacionar Vídeo"
+                >
+                  <RotateCw className="w-5 h-5" /> Rotacionar
+                </button>
+              </div>
             </div>
           ) : (
             <>
