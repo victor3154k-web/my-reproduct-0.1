@@ -834,30 +834,64 @@ export default function App() {
         {/* Billboard / Hero Section */}
         <section className="relative h-[56.25vw] md:h-[80vh] w-full overflow-hidden">
           {currentVideo ? (
-            <div className="absolute inset-0 bg-black z-50 flex items-center justify-center overflow-hidden">
-              <video 
-                ref={videoRef}
-                className="w-full h-full object-contain transition-transform duration-300"
-                style={{ transform: `rotate(${videoRotation}deg)` }}
-                controls
-                autoPlay
-              />
-              <div className="absolute top-6 left-6 md:top-10 md:left-12 flex items-center gap-3 z-20">
-                <button 
-                  onClick={() => { setCurrentVideo(null); setVideoRotation(0); }}
-                  className="flex items-center gap-2 px-4 py-2 bg-black/50 rounded-md hover:bg-black/70 transition-colors text-white font-bold backdrop-blur-md border border-white/10"
-                >
-                  <ArrowLeft className="w-5 h-5" /> Voltar
-                </button>
-                <button 
-                  onClick={() => setVideoRotation(prev => (prev + 90) % 360)}
-                  className="flex items-center gap-2 px-4 py-2 bg-black/50 rounded-md hover:bg-black/70 transition-colors text-white font-bold backdrop-blur-md border border-white/10"
-                  title="Rotacionar Vídeo"
-                >
-                  <RotateCw className="w-5 h-5" /> Rotacionar
-                </button>
+              <div className="absolute inset-0 bg-black z-50 flex items-center justify-center overflow-hidden group/player">
+                <video 
+                  ref={videoRef}
+                  className="w-full h-full object-contain transition-transform duration-300"
+                  style={{ 
+                    transform: `rotate(${videoRotation}deg)`,
+                    width: (videoRotation % 180 !== 0) ? '100vh' : '100%',
+                    height: (videoRotation % 180 !== 0) ? '100vw' : '100%',
+                  }}
+                  controls
+                  autoPlay
+                />
+                
+                {/* Custom Overlay Controls (Don't rotate) */}
+                <div className="absolute top-0 left-0 right-0 p-6 md:p-10 flex items-center justify-between z-20 bg-gradient-to-b from-black/80 to-transparent opacity-100 transition-opacity duration-300">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => { setCurrentVideo(null); setVideoRotation(0); }}
+                      className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-md transition-colors text-white font-bold backdrop-blur-md border border-white/10"
+                    >
+                      <ArrowLeft className="w-5 h-5" /> Voltar
+                    </button>
+                    <div className="h-6 w-px bg-white/20 mx-1" />
+                    <h3 className="text-white font-bold hidden md:block truncate max-w-[200px]">{currentVideo.title}</h3>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => setVideoRotation(prev => (prev + 90) % 360)}
+                      className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-md transition-colors text-white font-bold backdrop-blur-md border border-white/10"
+                      title="Rotacionar Vídeo"
+                    >
+                      <RotateCw className="w-5 h-5" />
+                      <span className="hidden sm:inline">Rotacionar</span>
+                    </button>
+                    
+                    <button 
+                      onClick={() => {
+                        const container = videoRef.current?.parentElement;
+                        if (container) {
+                          if (document.fullscreenElement) {
+                            document.exitFullscreen();
+                          } else {
+                            container.requestFullscreen().catch(err => {
+                              console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                            });
+                          }
+                        }
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-md transition-colors text-white font-bold backdrop-blur-md border border-white/10"
+                      title="Tela Cheia"
+                    >
+                      <Maximize className="w-5 h-5" />
+                      <span className="hidden sm:inline">Tela Cheia</span>
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
           ) : (
             <>
               <AnimatePresence mode="wait">
