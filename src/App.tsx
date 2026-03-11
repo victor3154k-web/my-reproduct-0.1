@@ -38,6 +38,7 @@ interface VideoItem {
 
 export default function App() {
   const [theme, setTheme] = useState<'blue' | 'emerald'>('blue');
+  const [mode, setMode] = useState<'amoled' | 'dark' | 'light'>('amoled');
   const [isHovered, setIsHovered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -389,6 +390,38 @@ export default function App() {
 
   const current = themeConfig[theme];
 
+  const modeConfig = {
+    amoled: {
+      bg: 'bg-[#000000]',
+      card: 'bg-[#141414]',
+      text: 'text-white',
+      border: 'border-white/10',
+      header: 'from-black/90 to-transparent',
+      input: 'bg-white/5',
+      muted: 'text-zinc-400'
+    },
+    dark: {
+      bg: 'bg-[#141414]',
+      card: 'bg-[#1f1f1f]',
+      text: 'text-white',
+      border: 'border-white/10',
+      header: 'from-black/70 to-transparent',
+      input: 'bg-white/10',
+      muted: 'text-zinc-400'
+    },
+    light: {
+      bg: 'bg-[#f5f5f5]',
+      card: 'bg-white',
+      text: 'text-[#141414]',
+      border: 'border-black/10',
+      header: 'from-white/90 to-transparent',
+      input: 'bg-black/5',
+      muted: 'text-zinc-500'
+    }
+  };
+
+  const m = modeConfig[mode];
+
   if (isInitializing) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
@@ -611,9 +644,9 @@ export default function App() {
 
   // Dashboard Screen (Netflix Style)
   return (
-    <div className="min-h-screen bg-[#141414] text-white font-sans flex flex-col selection:bg-[#E50914]/30 overflow-x-hidden">
+    <div className={`min-h-screen ${m.bg} ${m.text} font-sans flex flex-col selection:bg-[#E50914]/30 overflow-x-hidden transition-colors duration-500`}>
       {/* Netflix Header */}
-      <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-12 fixed top-0 w-full z-50 transition-colors duration-300 bg-gradient-to-b from-black/70 to-transparent">
+      <header className={`h-16 md:h-20 flex items-center justify-between px-4 md:px-12 fixed top-0 w-full z-50 transition-colors duration-300 bg-gradient-to-b ${m.header}`}>
         <div className="flex items-center gap-4 md:gap-10">
           <div className="cursor-pointer" onClick={() => setActiveTab('home')}>
             <h1 className="text-[#E50914] text-2xl md:text-3xl font-black tracking-tighter">LUMINA</h1>
@@ -629,7 +662,7 @@ export default function App() {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id as Tab)}
-                className={`text-sm transition-colors hover:text-zinc-300 ${activeTab === item.id ? 'font-bold' : 'font-normal text-zinc-200'}`}
+                className={`text-sm transition-colors hover:${m.text} ${activeTab === item.id ? 'font-bold' : `font-normal ${m.muted}`}`}
               >
                 {item.label}
               </button>
@@ -639,13 +672,13 @@ export default function App() {
 
         <div className="flex items-center gap-4 md:gap-6">
           <form onSubmit={handleUrlSubmit} className="hidden sm:flex items-center relative group">
-            <Search className="absolute left-3 w-4 h-4 text-white" />
+            <Search className={`absolute left-3 w-4 h-4 ${m.text}`} />
             <input 
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Títulos, links..."
-              className="bg-black/40 border border-white/20 rounded-sm py-1.5 pl-10 pr-4 text-xs w-0 group-hover:w-64 focus:w-64 focus:outline-none focus:border-white transition-all duration-500 placeholder:text-zinc-500"
+              className={`${m.input} border ${m.border} rounded-sm py-1.5 pl-10 pr-4 text-xs w-0 group-hover:w-64 focus:w-64 focus:outline-none focus:border-white transition-all duration-500 placeholder:text-zinc-500`}
             />
           </form>
 
@@ -674,32 +707,32 @@ export default function App() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute right-0 mt-2 w-48 bg-black/90 border border-white/10 shadow-2xl rounded-sm py-2 z-50"
+                  className={`absolute right-0 mt-2 w-48 ${m.card} border ${m.border} shadow-2xl rounded-sm py-2 z-50`}
                 >
-                  <div className="px-4 py-2 border-b border-white/10 mb-2">
+                  <div className={`px-4 py-2 border-b ${m.border} mb-2`}>
                     <p className="text-xs font-bold truncate">{user?.displayName || 'Visitante'}</p>
-                    <p className="text-[10px] text-zinc-500 truncate">{user?.email || 'Modo Offline'}</p>
+                    <p className={`text-[10px] ${m.muted} truncate`}>{user?.email || 'Modo Offline'}</p>
                   </div>
-                  <button className="w-full text-left px-4 py-2 text-xs hover:bg-white/10">Conta</button>
+                  <button className={`w-full text-left px-4 py-2 text-xs hover:${m.input}`}>Conta</button>
                   <button 
                     onClick={() => { setShowSettings(true); setShowProfileMenu(false); }}
-                    className="w-full text-left px-4 py-2 text-xs hover:bg-white/10"
+                    className={`w-full text-left px-4 py-2 text-xs hover:${m.input}`}
                   >
                     Configurações
                   </button>
-                  <button className="w-full text-left px-4 py-2 text-xs hover:bg-white/10">Centro de Ajuda</button>
-                  <div className="h-px bg-white/10 my-2" />
+                  <button className={`w-full text-left px-4 py-2 text-xs hover:${m.input}`}>Centro de Ajuda</button>
+                  <div className={`h-px ${m.border} my-2`} />
                   {user ? (
                     <button 
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-white/10 text-red-400"
+                      className={`w-full text-left px-4 py-2 text-xs font-bold hover:${m.input} text-red-400`}
                     >
                       Sair da Lumina
                     </button>
                   ) : (
                     <button 
                       onClick={() => window.location.reload()}
-                      className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-white/10 text-green-400"
+                      className={`w-full text-left px-4 py-2 text-xs font-bold hover:${m.input} text-green-400`}
                     >
                       Entrar no Sistema
                     </button>
@@ -740,7 +773,7 @@ export default function App() {
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
+                <div className={`absolute inset-0 bg-gradient-to-t ${m.header.replace('from-black', 'from-' + (mode === 'light' ? 'white' : 'black'))} via-transparent to-transparent`} />
               </div>
 
               <div className="absolute bottom-[15%] left-4 md:left-12 max-w-xl space-y-4 md:space-y-6">
@@ -748,12 +781,12 @@ export default function App() {
                   <div className="bg-[#E50914] p-0.5 rounded-sm">
                     <Play className="w-3 h-3 fill-current text-white" />
                   </div>
-                  <span className="text-xs font-bold tracking-widest uppercase text-zinc-300">Original Lumina</span>
+                  <span className={`text-xs font-bold tracking-widest uppercase ${m.muted}`}>Original Lumina</span>
                 </div>
                 
                 <h2 className="text-4xl md:text-7xl font-black tracking-tighter leading-none">A JORNADA</h2>
                 
-                <p className="text-sm md:text-lg text-zinc-200 font-medium line-clamp-3 md:line-clamp-none drop-shadow-lg">
+                <p className={`text-sm md:text-lg ${m.text} font-medium line-clamp-3 md:line-clamp-none drop-shadow-lg`}>
                   Em um futuro distópico, um grupo de sobreviventes descobre um sinal vindo de uma estação espacial abandonada que pode mudar o destino da humanidade.
                 </p>
 
@@ -782,7 +815,7 @@ export default function App() {
             <div className="px-4 md:px-12 pt-4">
               <button 
                 onClick={() => setActiveTab('home')}
-                className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm font-bold"
+                className={`flex items-center gap-2 ${m.muted} hover:${m.text} transition-colors text-sm font-bold`}
               >
                 <ArrowLeft className="w-4 h-4" /> Voltar para o Início
               </button>
@@ -884,7 +917,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="py-10 px-4 md:px-12 bg-[#141414] border-t border-white/5 text-zinc-500 text-xs">
+      <footer className={`py-10 px-4 md:px-12 ${m.bg} border-t ${m.border} ${m.muted} text-xs`}>
         <div className="max-w-4xl space-y-6">
           <div className="flex gap-6">
             <Github className="w-5 h-5 cursor-pointer hover:text-white" />
@@ -915,7 +948,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 50 }}
-              className="relative w-full max-w-4xl bg-[#181818] rounded-xl shadow-2xl overflow-hidden"
+              className={`relative w-full max-w-4xl ${m.card} rounded-xl shadow-2xl overflow-hidden`}
             >
               {/* Modal Header Image */}
               <div className="relative aspect-video w-full">
@@ -925,7 +958,7 @@ export default function App() {
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent" />
+                <div className={`absolute inset-0 bg-gradient-to-t ${m.header.replace('from-black', 'from-' + (mode === 'light' ? 'white' : 'black'))} via-transparent to-transparent`} />
                 
                 <button 
                   onClick={() => setSelectedInfoVideo(null)}
@@ -1052,9 +1085,9 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-[#121212] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+              className={`relative w-full max-w-lg ${m.card} border ${m.border} rounded-2xl shadow-2xl overflow-hidden`}
             >
-              <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-white/5">
+              <div className={`flex items-center justify-between px-6 py-5 border-b ${m.border} ${m.input}`}>
                 <div className="flex items-center gap-3">
                   {settingsView === 'add' && (
                     <button 
@@ -1126,8 +1159,43 @@ export default function App() {
                       </button>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                       <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-4">Preferências</h3>
+                      
+                      {/* Mode Switcher (AMOLED, Dark, Light) */}
+                      <div className={`p-4 ${m.input} rounded-xl border ${m.border} space-y-4`}>
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-lg ${m.input} flex items-center justify-center`}>
+                            <Monitor className="w-5 h-5" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold">Modo de Exibição</span>
+                            <span className={`text-[10px] ${m.muted} font-medium`}>Escolha o estilo visual do app</span>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { id: 'amoled', label: 'AMOLED' },
+                            { id: 'dark', label: 'Escuro' },
+                            { id: 'light', label: 'Claro' }
+                          ].map((item) => (
+                            <button 
+                              key={item.id}
+                              onClick={() => setMode(item.id as any)}
+                              className={`flex items-center justify-center py-3 rounded-lg border transition-all text-[9px] font-black tracking-widest uppercase ${
+                                mode === item.id 
+                                  ? 'bg-white text-black border-white' 
+                                  : `${m.input} ${m.border} ${m.muted} hover:bg-white/10`
+                              }`}
+                            >
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Performance Toggle */}
                       <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
