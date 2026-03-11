@@ -76,7 +76,9 @@ export default function App() {
   const [newVideoYear, setNewVideoYear] = useState('2026');
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const previewVideoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const previewHlsRef = useRef<Hls | null>(null);
 
   const defaultHeroVideos: VideoItem[] = [
     { 
@@ -123,6 +125,41 @@ export default function App() {
   }, [heroVideos]);
 
   const currentHero = heroVideos[currentHeroIndex] || defaultHeroVideos[0];
+
+  // Handle preview video in Info Modal
+  useEffect(() => {
+    if (selectedInfoVideo && previewVideoRef.current) {
+      const video = previewVideoRef.current;
+      
+      if (selectedInfoVideo.type === 'hls' || selectedInfoVideo.url.includes('.m3u8')) {
+        if (Hls.isSupported()) {
+          if (previewHlsRef.current) {
+            previewHlsRef.current.destroy();
+          }
+          const hls = new Hls();
+          hls.loadSource(selectedInfoVideo.url);
+          hls.attachMedia(video);
+          previewHlsRef.current = hls;
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            video.play().catch(e => console.log("Auto-play blocked:", e));
+          });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = selectedInfoVideo.url;
+          video.play().catch(e => console.log("Auto-play blocked:", e));
+        }
+      } else {
+        video.src = selectedInfoVideo.url;
+        video.play().catch(e => console.log("Auto-play blocked:", e));
+      }
+    }
+
+    return () => {
+      if (previewHlsRef.current) {
+        previewHlsRef.current.destroy();
+        previewHlsRef.current = null;
+      }
+    };
+  }, [selectedInfoVideo]);
 
   // Automatic theme cycling
   useEffect(() => {
@@ -1029,7 +1066,14 @@ export default function App() {
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                 />
-                <div className={`absolute inset-0 bg-gradient-to-t ${m.header.replace('from-black', 'from-' + (mode === 'light' ? 'white' : 'black'))} via-transparent to-transparent`} />
+                <video 
+                  ref={previewVideoRef}
+                  muted
+                  loop
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className={`absolute inset-0 bg-gradient-to-t ${m.header.replace('from-black', 'from-' + (mode === 'light' ? 'white' : 'black'))} via-transparent to-transparent pointer-events-none`} />
                 
                 <button 
                   onClick={() => setSelectedInfoVideo(null)}
